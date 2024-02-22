@@ -22,7 +22,7 @@ app.use(cors());
 
 app.get(`/info/:address`, async function (req, res, next) {
   try {
-    console.log("console here");
+    console.log("console here INFO");
     const user = await User.findOne({address: req.params.address});
     if(!user) return res.status(201).json({status: false, message: "this user isnt updated"})
 
@@ -36,22 +36,29 @@ app.get(`/info/:address`, async function (req, res, next) {
 app.post(`/addAlloc/:address`, async function (req, res) {
   try {
     console.log(req.body, "hereeee");
-    const {limit, goldBalance, silverBalance, totalGold, totalSilver} = req.body;
-    if(!limit) return res.status(201).json({status: false, message: "Limit is needed"});
-    if(!goldBalance) return res.status(201).json({status: false, message: "Goldbalance is needed"});
-    if(!totalGold) return res.status(201).json({status: false, message: "total Gold is needed"});
-    if(!silverBalance) return res.status(201).json({status: false, message: "silver Balance is needed"});
-    if(!totalSilver) return res.status(201).json({status: false, message: "totalSilver is needed"});
+
+    const { duplicate, limit, goldBalance, silverBalance, totalGold, totalSilver} = req.body;
+    const duplcatecheck = await User.findOne({address: req.params.address, duplicate: duplicate});
+
+    if(duplcatecheck) return res.status(201).json({status: false, message: "Duplicate send"});
+    // if(!goldBalance) return res.status(201).json({status: false, message: "Goldbalance is needed"});
+    // if(!totalGold) return res.status(201).json({status: false, message: "total Gold is needed"});
+    // if(!silverBalance) return res.status(201).json({status: false, message: "silver Balance is needed"});
+    // if(!totalSilver) return res.status(201).json({status: false, message: "totalSilver is needed"});
     
 
+    //
+    const user = await User.findOne({address: req.params.address});
+    console.log("two, track",);
     //run the calculation
     const alloc = (((goldBalance * 5) + silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
-    console.log(alloc, "hi there oo");
+    console.log(alloc, "hi there oo alloc");
     let userUpdate;
-    if(!req.params.address) {
+    if(!user) {
       userUpdate = new User({
          address: req.params.address,
-         allocation: alloc,
+         allocation: alloc ? alloc : 0,
+         duplicate: duplicate,
          limit: limit 
         })
       userUpdate = await userUpdate.save();
@@ -63,7 +70,8 @@ app.post(`/addAlloc/:address`, async function (req, res) {
            allocation: alloc,
          },
          $set: {
-           limit: limit 
+           duplicate : duplicate,
+           limit: limit
          }
         }, 
         {new: true})
@@ -77,9 +85,10 @@ app.post(`/addAlloc/:address`, async function (req, res) {
 
 app.post(`/updateAlloc/:address`, async function (req, res) {
   try {
-    console.log("console here");
 
     const { amount } = req.body;
+    console.log("console here", amount);
+
     if(!req.params.address) return res.status(201).json({status: false, message: "address is needed to execute this function"});
     
     const userUpdate = await User.findOneAndUpdate(
