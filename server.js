@@ -35,12 +35,12 @@ app.get(`/info/:address`, async function (req, res, next) {
 
 app.post(`/addAlloc/:address`, async function (req, res) {
   try {
-    console.log(req.body, "hereeee");
+    console.log(req.body, req.params.address, "hereeee");
 
     const { duplicate, limit, goldBalance, silverBalance, totalGold, totalSilver} = req.body;
-    const duplcatecheck = await User.findOne({address: req.params.address, duplicate: duplicate});
+    // const duplcatecheck = await User.findOne({address: req.params.address, duplicate: duplicate});
 
-    if(duplcatecheck) return res.status(201).json({status: false, message: "Duplicate send"});
+    // if(duplcatecheck) return res.status(201).json({status: false, message: "Duplicate send"});
     // if(!goldBalance) return res.status(201).json({status: false, message: "Goldbalance is needed"});
     // if(!totalGold) return res.status(201).json({status: false, message: "total Gold is needed"});
     // if(!silverBalance) return res.status(201).json({status: false, message: "silver Balance is needed"});
@@ -49,12 +49,13 @@ app.post(`/addAlloc/:address`, async function (req, res) {
 
     //
     const user = await User.findOne({address: req.params.address});
-    console.log("two, track",);
+    console.log("two, track", user);
     //run the calculation
     const alloc = (((goldBalance * 5) + silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
     console.log(alloc, "hi there oo alloc");
     let userUpdate;
     if(!user) {
+      console.log("bad oooooo geeeeh");
       userUpdate = new User({
          address: req.params.address,
          allocation: alloc ? alloc : 0,
@@ -63,18 +64,18 @@ app.post(`/addAlloc/:address`, async function (req, res) {
         })
       userUpdate = await userUpdate.save();
     } else {
+      console.log("incrementing ooooo, checkout");
        userUpdate = await User.findOneAndUpdate(
-        {address: req.params.address},
+        { address: req.params.address }, 
         {
-         $inc: {
-           allocation: alloc,
-         },
-         $set: {
-           duplicate : duplicate,
-           limit: limit
-         }
-        }, 
-        {new: true})
+          $inc: { allocation: alloc },
+          $set: {  
+            duplicate: duplicate,   
+            limit: limit  
+          }
+        },
+        { new: true }
+      );
     }
      
      if(userUpdate) return res.status(200).json({status: true, data: userUpdate});
