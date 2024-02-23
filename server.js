@@ -59,7 +59,6 @@ app.post(`/addAlloc/:address`, async function (req, res) {
       userUpdate = new User({
          address: req.params.address,
          allocation: alloc ? alloc : 0,
-         duplicate: duplicate,
          limit: limit 
         })
       userUpdate = await userUpdate.save();
@@ -68,9 +67,8 @@ app.post(`/addAlloc/:address`, async function (req, res) {
        userUpdate = await User.findOneAndUpdate(
         { address: req.params.address }, 
         {
-          $inc: { allocation: alloc },
-          $set: {  
-            duplicate: duplicate,   
+          $set: {
+            allocation: alloc,  
             limit: limit  
           }
         },
