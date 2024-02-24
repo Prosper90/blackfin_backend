@@ -37,30 +37,38 @@ app.post(`/addAlloc/:address`, async function (req, res) {
   try {
     console.log(req.body, req.params.address, "hereeee");
 
-    const { duplicate, limit, goldBalance, silverBalance, totalGold, totalSilver} = req.body;
-    // const duplcatecheck = await User.findOne({address: req.params.address, duplicate: duplicate});
-
-    // if(duplcatecheck) return res.status(201).json({status: false, message: "Duplicate send"});
-    // if(!goldBalance) return res.status(201).json({status: false, message: "Goldbalance is needed"});
-    // if(!totalGold) return res.status(201).json({status: false, message: "total Gold is needed"});
-    // if(!silverBalance) return res.status(201).json({status: false, message: "silver Balance is needed"});
-    // if(!totalSilver) return res.status(201).json({status: false, message: "totalSilver is needed"});
+    const { limit, goldBalance, silverBalance, totalGold, totalSilver} = req.body;
     
-
     //
     const user = await User.findOne({address: req.params.address});
     console.log("two, track", user);
     //run the calculation
-    const alloc = (((goldBalance * 5) + silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
+    let alloc = (((goldBalance * 5) + silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
     console.log(alloc, "hi there oo alloc");
     let userUpdate;
     if(!user) {
       console.log("bad oooooo geeeeh");
       userUpdate = new User({
          address: req.params.address,
-         allocation: alloc ? alloc : 0,
+         goldBalance: goldBalance,
+         silverBalance: silverBalance,
+         allocation: alloc,
          limit: limit 
         })
+
+      // Update allocations for all users
+      const users = await User.find();
+      for(let u of users) { 
+        if(u.address !== req.params.address) {
+          const eachAlloc = (((u.goldBalance * 5) + u.silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
+          // Update user allocation
+          await User.updateOne({address: u.address}, {
+            $set: {allocation: eachAlloc}  
+          });
+        }
+      }
+
+      console.log("gasping here and there");
       userUpdate = await userUpdate.save();
     } else {
       console.log("incrementing ooooo, checkout");
@@ -68,12 +76,28 @@ app.post(`/addAlloc/:address`, async function (req, res) {
         { address: req.params.address }, 
         {
           $set: {
+            goldBalance: goldBalance,
+            silverBalance: silverBalance,
             allocation: alloc,  
             limit: limit  
           }
         },
         { new: true }
       );
+
+        // Update allocations for all users
+        const users = await User.find();
+        for(let u of users) { 
+          if(u.address !== req.params.address) {
+            const eachAlloc = (((u.goldBalance * 5) + u.silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
+            // Update user allocation
+            await User.updateOne({address: u.address}, {
+              $set: {allocation: eachAlloc}  
+            });
+          }
+        }
+
+        console.log("Updating complete ooooooo")
     }
      
      if(userUpdate) return res.status(200).json({status: true, data: userUpdate});
