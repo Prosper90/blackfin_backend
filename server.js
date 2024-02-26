@@ -33,6 +33,40 @@ app.get(`/info/:address`, async function (req, res, next) {
   }
 });
 
+app.post(`/updateEvent/:address`, async function (req, res) {
+  const { limit, goldBalance, silverBalance, totalGold, totalSilver} = req.body;
+
+  let alloc = (((goldBalance * 5) + silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
+
+  userUpdate = await User.findOneAndUpdate(
+    { address: req.params.address }, 
+    {
+      $set: {
+        goldBalance: goldBalance,
+        silverBalance: silverBalance,
+        allocation: alloc,  
+        limit: limit  
+      }
+    },
+    { new: true }
+  );
+
+    // Update allocations for all users
+    const users = await User.find();
+    for(let u of users) { 
+      if(u.address !== req.params.address) {
+        const eachAlloc = (((u.goldBalance * 5) + u.silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
+        // Update user allocation
+        await User.updateOne({address: u.address}, {
+          $set: {allocation: eachAlloc}  
+        });
+      }
+    }
+
+    console.log("Updating complete ooooooo")
+    if(userUpdate) return res.status(200).json({status: true, data: userUpdate});
+})
+
 app.post(`/addAlloc/:address`, async function (req, res) {
   try {
     console.log(req.body, req.params.address, "hereeee");
@@ -97,7 +131,7 @@ app.post(`/addAlloc/:address`, async function (req, res) {
           }
         }
 
-        console.log("Updating complete ooooooo")
+        console.log("Updating complete ooooooo");
     }
      
      if(userUpdate) return res.status(200).json({status: true, data: userUpdate});
