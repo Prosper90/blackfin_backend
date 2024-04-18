@@ -265,7 +265,7 @@ app.post("/add_user", async (req, res, next) => {
     res.status(200).json({
       status: true,
       allup: updatedAll,
-      message: "User deleted",
+      message: "User Added",
     });
   } catch (error) {
     console.log(error, "getting error");
