@@ -94,18 +94,6 @@ app.post(`/addAlloc/:address`, async function (req, res) {
         limit: limit,
       });
 
-      // Update allocations for all users
-      // const users = await User.find();
-      // for(let u of users) {
-      //   if(u.address !== req.params.address) {
-      //     const eachAlloc = (((u.goldBalance * 5) + u.silverBalance) / ((totalGold * 5 ) + totalSilver)) * limit;
-      //     // Update user allocation
-      //     await User.updateOne({address: u.address}, {
-      //       $set: {allocation: eachAlloc}
-      //     });
-      //   }
-      // }
-
       console.log("gasping here and there");
       userUpdate = await userUpdate.save();
     } else {
@@ -214,6 +202,73 @@ app.put("/update_user", async (req, res, next) => {
     });
   } catch (error) {
     console.log(error, "checking error out");
+  }
+});
+
+app.delete("/delete_user", async (req, res, next) => {
+  try {
+    const user = await User.findOne({ address: req.body.address });
+    if (!user) {
+      return next(new ErrorResponse(`user not found.`, 401));
+    }
+
+    await User.deleteOne({ address: req.body.address });
+    const updatedAll = await User.find({});
+
+    res.status(200).json({
+      status: true,
+      allup: updatedAll,
+      message: "User deleted",
+    });
+  } catch (error) {
+    console.log();
+  }
+});
+
+app.post("/add_user", async (req, res, next) => {
+  try {
+    const {
+      address,
+      allocation,
+      goldBalance,
+      silverBalance,
+      ownership,
+      limit,
+    } = req.body;
+
+    if (!address) {
+      return res.status(201).json({
+        status: false,
+        message: "Address is needed",
+      });
+    }
+
+    if (!allocation) {
+      return res.status(201).json({
+        status: false,
+        message: "Allocation is needed",
+      });
+    }
+
+    let addUser = new User({
+      address: address,
+      goldBalance: parseInt(goldBalance),
+      silverBalance: parseInt(silverBalance),
+      allocation: parseFloat(allocation),
+      ownership: parseFloat(ownership),
+      limit: parseFloat(limit),
+    });
+
+    addUser = await addUser.save();
+    const updatedAll = await User.find({});
+
+    res.status(200).json({
+      status: true,
+      allup: updatedAll,
+      message: "User deleted",
+    });
+  } catch (error) {
+    console.log(error, "getting error");
   }
 });
 
