@@ -272,6 +272,23 @@ app.post("/add_user", async (req, res, next) => {
   }
 });
 
+app.put("/update_allocation", async (req, res, next) => {
+  try {
+    await User.updateMany(
+      {},
+      { $set: { limit: req.body.new_number } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: true,
+      message: "Limit updated",
+    });
+  } catch (error) {
+    console.log(error, "checking error out");
+  }
+});
+
 //ini my database
 mongoose
   .connect(process.env.MONGODB_URI, {
