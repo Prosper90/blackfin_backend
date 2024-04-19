@@ -279,9 +279,10 @@ app.put("/update_allocation", async (req, res, next) => {
       { $set: { limit: req.body.new_number } },
       { new: true }
     );
-
+    const updatedAll = await User.find({});
     res.status(200).json({
       status: true,
+      allup: updatedAll,
       message: "Limit updated",
     });
   } catch (error) {
