@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 //parse application/json
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
+app.use(cors({ origin: ["https://blackfin.netlify.app"] }));
 
 app.get(`/info/:address`, async function (req, res, next) {
   try {
